@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Мой Маркет</title>
+
+<style>
+
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172b4d}
+
+header{background:#102a43;color:white;padding:25px 16px;text-align:center}
+
+header h1{margin:0;font-size:30px}
+
+header p{margin-bottom:0}
+
+main{max-width:900px;margin:auto;padding:18px}
+
+input,select{padding:13px;border:1px solid #ddd;border-radius:10px;font-size:16px}
+
+#search{width:calc(100% - 28px);margin-bottom:10px}
+
+select{width:100%;margin-bottom:18px;background:white}
+
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+
+.card{background:white;border-radius:15px;padding:13px;box-shadow:0 3px 12px #0000000b}
+
+.pic{background:#eaf2ff;border-radius:12px;text-align:center;padding:20px;font-size:48px}
+
+.card h3{font-size:16px}
+
+.price{font-size:19px;font-weight:bold}
+
+button{border:0;border-radius:10px;background:#2563eb;color:white;padding:11px;font-weight:bold}
+
+.card button{width:100%}
+
+.cart{margin-top:24px;background:white;padding:16px;border-radius:15px}
+
+.cartitem{padding:8px 0;border-bottom:1px solid #eee}
+
+.order{width:100%;background:#16a34a;margin-top:12px;font-size:16px}
+
+.small{color:#64748b;font-size:13px}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>🛍️ Мой Маркет</h1>
+
+<p>Полезные товары для вашего дома</p>
+
+</header>
+
+<main>
+
+<h2>Каталог товаров</h2>
+
+<input id="search" placeholder="🔎 Найти товар..." oninput="showProducts()">
+
+<select id="category" onchange="showProducts()">
+
+<option value="Все">Все категории</option>
+
+<option>Для дома</option>
+
+<option>Кухня</option>
+
+<option>Гаджеты</option>
+
+</select>
+
+<div class="products" id="products"></div>
+
+<section class="cart">
+
+<h2>🛒 Корзина</h2>
+
+<div id="cart"></div>
+
+<h3 id="total">Итого: 0 ₽</h3>
+
+<input id="customer" placeholder="Ваше имя" style="width:calc(100% - 28px);margin-bottom:8px">
+
+<input id="city" placeholder="Ваш город" style="width:calc(100% - 28px)">
+
+<button class="order" onclick="order()">Заказать через WhatsApp</button>
+
+<p class="small">Наличие, доставку и окончательную стоимость подтвердит продавец.</p>
+
+</section>
+
+</main>
+
+<script>
+
+// ВАЖНО: замени номер ниже на свой номер WhatsApp.
+
+// Только цифры, с кодом страны. Пример: 79991234567
+
+const WHATSAPP = "79991234567";
+
+const items = [
+
+{id:1,name:"Ручной массажёр",cat:"Гаджеты",price:1290,emoji:"💆"},
+
+{id:2,name:"Органайзер для кухни",cat:"Кухня",price:590,emoji:"🧺"},
+
+{id:3,name:"Настольная лампа",cat:"Гаджеты",price:990,emoji:"💡"},
+
+{id:4,name:"Бутылка для воды",cat:"Для дома",price:390,emoji:"🚰"},
+
+{id:5,name:"Контейнеры для хранения",cat:"Кухня",price:750,emoji:"🥡"},
+
+{id:6,name:"Щётка для уборки",cat:"Для дома",price:290,emoji:"🧹"},
+
+{id:7,name:"Мини-вентилятор",cat:"Гаджеты",price:690,emoji:"🌀"},
+
+{id:8,name:"Корзина для хранения",cat:"Для дома",price:490,emoji:"🧺"}
+
+];
+
+const basket={};
+
+const rub=n=>n.toLocaleString("ru-RU")+" ₽";
+
+function showProducts(){
+
+const q=document.getElementById("search").value.toLowerCase();
+
+const c=document.getElementById("category").value;
+
+const list=items.filter(p=>(c==="Все"||p.cat===c)&&p.name.toLowerCase().includes(q));
+
+document.getElementById("products").innerHTML=list.length?list.map(p=>`
+
+<div class="card">
+
+<div class="pic">${p.emoji}</div>
+
+<h3>${p.name}</h3><div class="small">${p.cat}</div>
+
+<p class="price">${rub(p.price)}</p>
+
+<button onclick="add(${p.id})">+ В корзину</button>
+
+</div>`).join(""):"<p>Товары не найдены.</p>";
+
+}
+
+function add(id){basket[id]=(basket[id]||0)+1;showCart();}
+
+function change(id,d){basket[id]=(basket[id]||0)+d;if(basket[id]<=0)delete basket[id];showCart();}
+
+function showCart(){
+
+const ids=Object.keys(basket);
+
+document.getElementById("cart").innerHTML=ids.length?ids.map(id=>{
+
+const p=items.find(x=>x.id==id);
+
+return `<div class="cartitem">${p.emoji} ${p.name}<br>${rub(p.price)} × ${basket[id]} 
+
+<button onclick="change(${id},-1)">−</button>
+
+<button onclick="change(${id},1)">+</button></div>`;
+
+}).join(""):"Корзина пока пустая.";
+
+const sum=ids.reduce((s,id)=>s+items.find(p=>p.id==id).price*basket[id],0);
+
+document.getElementById("total").textContent="Итого: "+rub(sum);
+
+}
+
+function order(){
+
+const ids=Object.keys(basket);
+
+if(!ids.length){alert("Сначала добавьте товар в корзину.");return;}
+
+const name=document.getElementById("customer").value.trim();
+
+const city=document.getElementById("city").value.trim();
+
+if(!name||!city){alert("Введите имя и город.");return;}
+
+if(WHATSAPP==="79991234567"){alert("Сначала замени демонстрационный номер WhatsApp в коде на свой номер продавца.");return;}
+
+const lines=ids.map(id=>{const p=items.find(x=>x.id==id);return p.name+" — "+basket[id]+" шт. = "+rub(p.price*basket[id]);});
+
+const sum=ids.reduce((s,id)=>s+items.find(p=>p.id==id).price*basket[id],0);
+
+const msg="Здравствуйте! Заказ из магазина Мой Маркет:\n"+lines.join("\n")+"\nИтого: "+rub(sum)+"\nИмя: "+name+"\nГород: "+city;
+
+window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURIComponent(msg),"_blank");
+
+}
+
+showProducts();showCart();
+
+</script>
+
+</body>
+
+</html>
